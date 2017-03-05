@@ -17,7 +17,7 @@ PROG_NAME = testarray
 TARMODE = 774
 
 # headers to include
-CFLAGS = -Wall -I.
+CFLAGS = -Wall -I. -D_DEBUG_C_ASSO_ARRAY
 CPPFLAGS = #
 # shared libs to include
 LDFLAGS = -lpthread

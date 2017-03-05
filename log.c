@@ -45,6 +45,7 @@
 #define __PUBLIC_INTERFACES
 #ifdef __PUBLIC_INTERFACES
 
+/* --------------------AMCLog----------------------- */
 ssize_t AMCLog(const char *format, ...)
 {
 	char buff[_CFG_LOG_BUFFER_LEN];

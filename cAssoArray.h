@@ -25,8 +25,8 @@
 #ifndef __C_ASSO_ARRAY_H__
 #define __C_ASSO_ARRAY_H__
 
-struct cAssoArray;
-typedef struct cAssoArray cAssoArray;
+struct _cAssoArray;
+typedef struct _cAssoArray cAssoArray;
 
 #ifndef NULL
 #ifndef _DO_NOT_DEF_NULL
@@ -42,17 +42,18 @@ typedef struct cAssoArray cAssoArray;
 #endif
 #endif
 
-cAssoArray *cAssoArray_Create(void);
+cAssoArray *cAssoArray_Create(BOOL locked);
 int cAssoArray_Delete(cAssoArray *array);
 
-int cAssoArray_Set(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate);
-int cAssoArray_Get(cAssoArray *array, const char *key);
+int cAssoArray_SetValue(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate);
+void *cAssoArray_GetValue(cAssoArray *array, const char *key);
+long cAssoArray_Size(cAssoArray *array);
 
-int cAssoArray_Remove(cAssoArray *array, const char *key, BOOL shouldFree);
-void *cAssoArray_Drain(cAssoArray *array, const char *key);
+int cAssoArray_RemoveValue(cAssoArray *array, const char *key, BOOL shouldFree);
+void *cAssoArray_DetachValue(cAssoArray *array, const char *key);
 
-int cAssoArray_Add(cAssoArray *array, const char *key, void *value);
-int cAssoArray_Update(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut);
+int cAssoArray_AddValue(cAssoArray *array, const char *key, void *value);
+int cAssoArray_UpdateValue(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut);
 
 
 #endif
