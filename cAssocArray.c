@@ -48,9 +48,11 @@
 
 #ifdef _DEBUG_C_ASSO_ARRAY
 #include "log.h"
-#define _DEBUG(fmt, args...)	AMCLog(__FILE__" %03d: "fmt"\n", __LINE__, ##args)
+#define _DEBUG(fmt, args...)	AMCLog(__FILE__" %03d: "fmt, __LINE__, ##args)
+#define _MARK()					_DEBUG("MARK")
 #else
 #define _DEBUG(fmt, args...)
+#define _MARK()					printf("Warning: This lib is under development!!!\n")
 #endif
 
 
@@ -133,33 +135,49 @@ static void _rb_dump_node(Node_st *node, size_t tabCount)
 	}
 	tab[tmp] = '\0';
 
+	if (NULL == node) {
+		return;
+	}
+
 	/* node */
 	if (_rb_node_is_black(node)) {
-		printf("%sNode \033[0;43mBlack\033[0m (%ld)\n", tab, node->hash);
+		printf("%sNode \033[0;43m \033[0mBlack (Hash: %ld)", tab, node->hash);
 	} else {
-		printf("%sNode \033[0;41mRed\033[0m   (%ld)\n", tab, node->hash);
+		printf("%sNode \033[0;41m \033[0mRed   (Hash: %ld)", tab, node->hash);
 	}
 
 	/* values */
 	{
 		Value_st *value = node->values;
 		for (; value; value = value->next) {
-			printf("%s--> [%p] - %s\n", tab, value->value, value->key);
+			printf("\t\t--> [Value: %p] - Key: \"%s\"\n", value->value, value->key);
 		}
 	}
 
 	/* children */
-	if (node->left) {
-		_rb_dump_node(node->left, tabCount + 1);
-	} else {
-		printf("%s\tNode left  <N/A>\n", tab);
+	if (node->left || node->right) {
+		if (node->left) {
+			_rb_dump_node(node->left, tabCount + 1);
+			if (node->left->parent != node) {
+				printf("ERROR: parent of %ld not %ld", node->left->hash, node->hash);
+				exit(1);
+			}
+		} else {
+			printf("%s\tNode left  <N/A>\n", tab);
+		}
+
+		if (node->right) {
+			_rb_dump_node(node->right, tabCount + 1);
+			if (node->right->parent != node) {
+				printf("ERROR: parent of %ld not %ld", node->right->hash, node->hash);
+				exit(1);
+			}
+		} else {
+			printf("%s\tNode right <N/A>\n", tab);
+		}
 	}
 
-	if (node->right) {
-		_rb_dump_node(node->right, tabCount + 1);
-	} else {
-		printf("%s\tNode right <N/A>\n", tab);
-	}
+	/* check */
 
 	return;
 }
@@ -568,7 +586,7 @@ static void __rb_check_insert_by_rb_rule(cAssocArray *array, Node_st *node)
 	if (_rb_node_is_root(node))							// root node. This is impossible because it is done previously
 	{
 		_DEBUG("MARK (%ld) case 1", node->hash);
-		_SET_RED(node);
+		_SET_BLACK(node);
 	}
 	else if (_rb_node_is_black(node->parent))			// parent black. Nothing additional needed
 	{
@@ -591,7 +609,7 @@ static void __rb_check_insert_by_rb_rule(cAssocArray *array, Node_st *node)
 			_DEBUG("MARK (%ld) case 4", node->hash);
 			__rb_rotate_left(array, node->parent);
 			node = node->left;
-			_rb_dump_node(array->children, 0);
+			//_rb_dump_node(array->children, 0);
 		}
 		else if ((node == node->parent->left) &&
 				(node->parent == node->parent->parent->right))
@@ -599,12 +617,12 @@ static void __rb_check_insert_by_rb_rule(cAssocArray *array, Node_st *node)
 			_DEBUG("MARK (%ld) case 4", node->hash);
 			__rb_rotate_right(array, node->parent);
 			node = node->right;
-			_rb_dump_node(array->children, 0);
+			//_rb_dump_node(array->children, 0);
 		}
 		else
 		{}
 
-		// Step 2
+		// Step 2 (Insert Case 5)
 		_SET_BLACK(node->parent);
 		_SET_RED(node->parent->parent);
 
@@ -618,8 +636,8 @@ static void __rb_check_insert_by_rb_rule(cAssocArray *array, Node_st *node)
 		{
 			_DEBUG("MARK (%ld) case 5", node->hash);
 			__rb_rotate_left(array, node->parent->parent);
-			_DEBUG("MARK test:");
-			_rb_dump_node(array->children, 0);
+			//_DEBUG("MARK test:");
+			//_rb_dump_node(array->children, 0);
 		}
 	}
 	return;
@@ -633,9 +651,9 @@ static int _rb_insert(cAssocArray *array, const char *key, long hash, void *valu
 	Node_st *newNode = NULL;
 	Value_st *newValue = NULL;
 	int error = -1;
-	*isDuplicated = FALSE;
+	BOOL duplicated = FALSE;
 	BOOL shouldCheckIntert = FALSE;
-	
+
 	if (NULL == array->children)	// root
 	{
 		newNode = _new_node_with_value(hash, Color_Black, key, value);
@@ -645,8 +663,9 @@ static int _rb_insert(cAssocArray *array, const char *key, long hash, void *valu
 
 		array->children = newNode;
 		array->count = 1;
-	
-		return 0;
+
+		errno = 0;
+		goto ENDS;
 	}
 
 	/* first of all, insert a node by binary search tree method */
@@ -705,7 +724,7 @@ static int _rb_insert(cAssocArray *array, const char *key, long hash, void *valu
 			}
 			else	// conflict
 			{
-				*isDuplicated = TRUE;
+				duplicated = TRUE;
 
 				if (replaceWhenConflict) {
 					if ((newValue->value != value)
@@ -735,6 +754,9 @@ static int _rb_insert(cAssocArray *array, const char *key, long hash, void *valu
 	error = 0;
 ENDS:
 	/* ends */
+	if (isDuplicated) {
+		*isDuplicated = duplicated;
+	}
 	return error;
 }
 
@@ -750,11 +772,12 @@ static int _rb_delete_leaf(cAssocArray *dict, Node_st *node, BOOL shouldFree)
 	}
 	else
 	{
-		_DEBUG("DEL: %ld <- %ld", node->hash, node->parent->hash);
 		if (node == node->parent->left) {
+			_DEBUG("DEL left of %ld (%ld)", node->parent->hash, node->hash);
 			node->parent->left= NULL;
 		}
 		else {
+			_DEBUG("DEL right of %ld (%ld)", node->parent->hash, node->hash);
 			node->parent->right = NULL;
 		}
 
@@ -835,7 +858,7 @@ static void __rb_delete_node_and_reconnect_with(cAssocArray *array, Node_st *nod
 /* --------------------__rb_check_delete_node_case_6----------------------- */
 static void __rb_check_delete_node_case_6(cAssocArray *array, Node_st *node)
 {
-	Node_st *sibling = _rb_brother_node(node->parent);
+	Node_st *sibling = _rb_brother_node(node);
 
 	sibling->color = node->parent->color;
 	_SET_BLACK(node->parent);
@@ -856,26 +879,46 @@ static void __rb_check_delete_node_case_6(cAssocArray *array, Node_st *node)
 /* --------------------__rb_check_delete_node_case_5----------------------- */
 static void __rb_check_delete_node_case_5(cAssocArray *array, Node_st *node)
 {
-	Node_st *sibling = _rb_brother_node(node->parent);
-	BOOL sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
-	BOOL sblRightIsBlack = (sibling->right) ? _rb_node_is_black(sibling->right) : TRUE;
+	Node_st *sibling = _rb_brother_node(node);
+	BOOL slbIsBlack;
+	BOOL sblLeftIsBlack;
+	BOOL sblRightIsBlack;
 
-	if (_rb_node_is_red(sibling))
+	if (sibling) {
+		slbIsBlack = _rb_node_is_black(sibling);
+		sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
+		sblRightIsBlack = (sibling->right) ? _rb_node_is_black(sibling->right) : TRUE;
+	}
+	else {_DEBUG("DEL: case 5 warning");exit(1);
+		slbIsBlack = TRUE;
+		sblLeftIsBlack = TRUE;
+		sblRightIsBlack= TRUE;
+	}
+
+	if (FALSE == slbIsBlack)
 	{}
 	else if ((node == node->parent->left) &&
 		(FALSE == sblLeftIsBlack) &&
 		sblRightIsBlack)
 	{
-		_SET_RED(sibling);
-		_SET_BLACK(sibling->left);
+		if (sibling) {
+			_SET_RED(sibling);
+		}
+		if (sibling && sibling->left) {
+			_SET_BLACK(sibling->left);
+		}
 		__rb_rotate_right(array, sibling);
 	}
 	else if ((node == node->parent->right) &&
 			sblLeftIsBlack &&
 			(FALSE == sblRightIsBlack))
 	{
-		_SET_RED(sibling);
-		_SET_BLACK(sibling->right);
+		if (sibling) {
+			_SET_RED(sibling);
+		}
+		if (sibling && sibling->right) {
+			_SET_BLACK(sibling->right);
+		}
 		__rb_rotate_left(array, sibling);
 	}
 	else
@@ -888,16 +931,31 @@ static void __rb_check_delete_node_case_5(cAssocArray *array, Node_st *node)
 /* --------------------__rb_check_delete_node_case_4----------------------- */
 static void __rb_check_delete_node_case_4(cAssocArray *array, Node_st *node)
 {
-	Node_st *sibling = _rb_brother_node(node->parent);
-	BOOL sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
-	BOOL sblRightIsBlack = (sibling->right) ? _rb_node_is_black(sibling->right) : TRUE;
+	Node_st *sibling = _rb_brother_node(node);
+	BOOL sblLeftIsBlack;
+	BOOL sblRightIsBlack;
+	BOOL sblIsBlack;
 
-	if (_rb_node_is_red(node->parent) &&
-		_rb_node_is_black(sibling) &&
-		sblLeftIsBlack && sblRightIsBlack)
+	if (NULL == sibling) {
+		sblIsBlack = TRUE;
+		sblLeftIsBlack = TRUE;
+		sblRightIsBlack = TRUE;
+	}
+	else {
+		sblIsBlack = _rb_node_is_black(sibling);
+		sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
+		sblRightIsBlack = (sibling->right) ? _rb_node_is_black(sibling->right) : TRUE;
+	}
+
+	if (_rb_node_is_red(node->parent)
+		&& sblIsBlack
+		&& sblLeftIsBlack
+		&& sblRightIsBlack)
 	{
 		_DEBUG("DEL: case 4");
-		_SET_RED(sibling);
+		if (sibling) {
+			_SET_RED(sibling);
+		}
 		_SET_BLACK(node->parent);
 	}
 	else
@@ -910,17 +968,31 @@ static void __rb_check_delete_node_case_4(cAssocArray *array, Node_st *node)
 /* --------------------__rb_check_delete_node_case_3----------------------- */
 static void __rb_check_delete_node_case_3(cAssocArray *array, Node_st *node)
 {
-	Node_st *sibling = _rb_brother_node(node->parent);
-	BOOL sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
-	BOOL sblRightIsBlack = (sibling->right) ? _rb_node_is_black(sibling->right) : TRUE;
+	Node_st *sibling = _rb_brother_node(node);
+	BOOL sblLeftIsBlack;
+	BOOL sblRightIsBlack;
+	BOOL sblIsBlack;
+
+	if (NULL == sibling) {
+		sblIsBlack = TRUE;
+		sblLeftIsBlack = TRUE;
+		sblRightIsBlack = TRUE;
+	}
+	else {
+		sblIsBlack = _rb_node_is_black(sibling);
+		sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
+		sblRightIsBlack = (sibling->right) ? _rb_node_is_black(sibling->right) : TRUE;
+	}
 
 	if (_rb_node_is_black(node->parent)
-		&& _rb_node_is_black(sibling)
 		&& sblLeftIsBlack
-		&& sblRightIsBlack)
+		&& sblRightIsBlack
+		&& sblIsBlack)
 	{
 		_DEBUG("DEL: case 3");
-		_rb_node_is_red(sibling);
+		if (sibling) {
+			_SET_RED(sibling);
+		}
 		__rb_check_delete_node_case_1(array, node->parent);
 	}
 	else
@@ -934,8 +1006,8 @@ static void __rb_check_delete_node_case_3(cAssocArray *array, Node_st *node)
 static void __rb_check_delete_node_case_2(cAssocArray *array, Node_st *node)
 {
 	Node_st *sibling = _rb_brother_node(node);
-		
-	if (_rb_node_is_red(sibling))
+
+	if (sibling && _rb_node_is_red(sibling))
 	{
 		_DEBUG("DEL: case 2");
 		_SET_RED(node->parent);
@@ -959,13 +1031,11 @@ static void __rb_check_delete_node_case_2(cAssocArray *array, Node_st *node)
 static void __rb_check_delete_node_case_1(cAssocArray *array, Node_st *node)
 {
 	/* let's operate with diferent cases */
-	if (_rb_node_is_root(node))
-	{
+	if (_rb_node_is_root(node)) {
 		_DEBUG("DEL: case 1");
 		return;
 	}
-	else			// Right child version
-	{
+	else {		// Right child version
 		__rb_check_delete_node_case_2(array, node);
 	}
 }
@@ -974,7 +1044,6 @@ static void __rb_check_delete_node_case_1(cAssocArray *array, Node_st *node)
 /* --------------------_rb_delete_node----------------------- */
 static int _rb_delete_node(cAssocArray *array, Node_st *node, BOOL freeObject)
 {
-	int error = 0;
 	BOOL nodeHasChild, nodeHasTwoChildren, nodeHasLeftChild, nodeHasRightChild;
 	_rb_read_node_status(node, &nodeHasChild, &nodeHasTwoChildren, &nodeHasLeftChild, &nodeHasRightChild);
 
@@ -982,16 +1051,23 @@ static int _rb_delete_node(cAssocArray *array, Node_st *node, BOOL freeObject)
 	{
 		_DEBUG("DEL: node %ld is leaf", node->hash);
 		_rb_delete_leaf(array, node, freeObject);
-		return error;
+		return 0;
 	}
 	else if (nodeHasTwoChildren)
 	{
-		_DEBUG("DEL: node %ld has 2 children", node->hash);
+		Node_st tmpNode;
 		Node_st *smallestRightChild = _rb_find_min_leaf(node->right);
+		_DEBUG("DEL: node %ld has 2 children, replace with %ld (%s)", node->hash, smallestRightChild->hash, smallestRightChild->values->key);
 
 		/* replace with smallest node */
+		tmpNode.hash = node->hash;
+		tmpNode.values = node->values;
+		
 		node->hash = smallestRightChild->hash;
 		node->values = smallestRightChild->values;
+
+		smallestRightChild->hash = tmpNode.hash;
+		smallestRightChild->values = tmpNode.values;
 
 		/* start operation with the smallest one */
 		return _rb_delete_node(array, smallestRightChild, freeObject);
@@ -1005,7 +1081,8 @@ static int _rb_delete_node(cAssocArray *array, Node_st *node, BOOL freeObject)
 			_DEBUG("DEL: node %ld red", node->hash);
 			__rb_delete_node_and_reconnect_with(array, node, child);
 			_free_node(node, freeObject);
-			return error;
+			node = NULL;
+			return 0;
 		}
 		else if (_rb_node_is_red(child))		// if node is black but its child is red. we could repace it with its child and refill the child as black
 		{
@@ -1013,16 +1090,17 @@ static int _rb_delete_node(cAssocArray *array, Node_st *node, BOOL freeObject)
 			__rb_delete_node_and_reconnect_with(array, node, child);
 			_SET_BLACK(child);
 			_free_node(node, freeObject);
-			return error;
+			node = NULL;
+			return 0;
 		}
 		else				// both node and its child are all black. This is the most complex one.
 		{
 			/* first of all, we should replace node with child */
 			__rb_delete_node_and_reconnect_with(array, node, child);
 			_free_node(node, freeObject);	/* "node" val is useless */
-
+			node = NULL;
 			__rb_check_delete_node_case_1(array, child);
-			return error;
+			return 0;
 		}
 	}
 }
@@ -1149,6 +1227,7 @@ int cAssocArray_SetValue(cAssocArray *array, const char *key, void *value, BOOL 
 	}
 
 	hash = _hash(key);
+	_DEBUG("Now insert Hash value for \"%s\": %ld", key, hash);
 	_LOCK_ARRAY_WRITE(array);
 	ret = _rb_insert(array, key, hash, value, TRUE, freeDuplicate, NULL);
 	_UNLOCK_ARRAY_WRITE(array);
@@ -1205,9 +1284,11 @@ int cAssocArray_RemoveValue(cAssocArray *array, const char *key, BOOL shouldFree
 		return -1;
 	}
 
+	_DEBUG("Delete %s", key);
 	_LOCK_ARRAY_WRITE(array);
 	ret = _rb_delete_value_in_array(array, key, shouldFree);
 	_UNLOCK_ARRAY_WRITE(array);
+	_DEBUG("Delete %s done", key);
 	
 	return ret;
 }
@@ -1330,6 +1411,22 @@ int cAssocArray_UpdateValue(cAssocArray *array, const char *key, void *value, BO
 		*prevValueOut = prevValue;
 	}
 	return ret;
+}
+
+
+/* --------------------cAssocArray_DumpToStdout----------------------- */
+void cAssocArray_DumpToStdout(cAssocArray *array)
+{
+	if (NULL == array) {
+		return;
+	}
+
+	_LOCK_ARRAY_READ(array);
+	printf("cAssocArray [%p], size %ld:\n", array, array->count);
+	_rb_dump_node(array->children, 1);
+	_UNLOCK_ARRAY_READ(array);
+
+	return;
 }
 
 

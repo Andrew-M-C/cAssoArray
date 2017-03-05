@@ -56,6 +56,7 @@ void *cAssocArray_DetachValue(cAssocArray *array, const char *key);
 int cAssocArray_AddValue(cAssocArray *array, const char *key, void *value);
 int cAssocArray_UpdateValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut);
 
+void cAssocArray_DumpToStdout(cAssocArray *array);
 
 #endif
 
