@@ -26,7 +26,7 @@
 		
 ********************************************************************************/
 
-#include "cAssoArray.h"
+#include "cAssocArray.h"
 
 
 int main(int argc, char* argv[])

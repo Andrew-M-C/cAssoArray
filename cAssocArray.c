@@ -1,6 +1,6 @@
 /*******************************************************************************
 	Copyright (C) 2017 by Andrew Chang <laplacezhang@126.com>
-	File name: 	cAssoArray.h
+	File name: 	cAssocArray.h
 
 	Description: 	
 	    This is the main implementation of C associative array. This array uses
@@ -10,6 +10,7 @@
 	3. uses list to avoid hash colutions
 			
 	History:
+		2014-03-05: File rename as "cAssocArray.c" along with class name
 		2014-03-04: File created as "cAssoArray.c"
 
 	------------------------------------------------------------------------
@@ -30,7 +31,7 @@
 #define __HEADERS
 #ifdef __HEADERS
 
-#include "cAssoArray.h"
+#include "cAssocArray.h"
 
 #include <stdio.h>
 #include <pthread.h>
@@ -77,7 +78,7 @@ typedef struct _Node {
 } Node_st;
 
 
-struct _cAssoArray {
+struct _cAssocArray {
 	struct _Node     *children;
 	BOOL              use_lock;
 	pthread_rwlock_t  rw_lock;
@@ -96,12 +97,12 @@ struct _cAssoArray {
 
 static inline BOOL _rb_node_is_black(Node_st *node);
 static inline BOOL _rb_node_is_red(Node_st *node);
-static void __rb_check_delete_node_case_1(cAssoArray *array, Node_st *node);
-static void __rb_check_delete_node_case_2(cAssoArray *array, Node_st *node);
-static void __rb_check_delete_node_case_3(cAssoArray *array, Node_st *node);
-static void __rb_check_delete_node_case_4(cAssoArray *array, Node_st *node);
-static void __rb_check_delete_node_case_5(cAssoArray *array, Node_st *node);
-static void __rb_check_delete_node_case_6(cAssoArray *array, Node_st *node);
+static void __rb_check_delete_node_case_1(cAssocArray *array, Node_st *node);
+static void __rb_check_delete_node_case_2(cAssocArray *array, Node_st *node);
+static void __rb_check_delete_node_case_3(cAssocArray *array, Node_st *node);
+static void __rb_check_delete_node_case_4(cAssocArray *array, Node_st *node);
+static void __rb_check_delete_node_case_5(cAssocArray *array, Node_st *node);
+static void __rb_check_delete_node_case_6(cAssocArray *array, Node_st *node);
 
 #endif
 
@@ -295,7 +296,7 @@ static long _hash(const char *key)
 
 
 /* --------------------_locate_value----------------------- */
-static Value_st *_locate_value(cAssoArray *array, const char *key, const long hash, Node_st **parentNodeOut, Value_st **prevValueOut)
+static Value_st *_locate_value(cAssocArray *array, const char *key, const long hash, Node_st **parentNodeOut, Value_st **prevValueOut)
 {
 	Node_st *parentNode = array->children;
 	Value_st *value = NULL;
@@ -349,7 +350,7 @@ static Value_st *_locate_value(cAssoArray *array, const char *key, const long ha
 
 
 /* --------------------_locate_node----------------------- */
-static Node_st *_locate_node(cAssoArray *array, long hash)
+static Node_st *_locate_node(cAssocArray *array, long hash)
 {
 	Node_st *ret = array->children;
 	BOOL isFound = FALSE;
@@ -459,7 +460,7 @@ static Node_st *_rb_find_min_leaf(Node_st *node)
 
 
 /* --------------------__rb_rotate_left----------------------- */
-static void __rb_rotate_left(cAssoArray *array, Node_st *node)
+static void __rb_rotate_left(cAssocArray *array, Node_st *node)
 {
 	Node_st *prevRight = node->right;
 	Node_st *prevRightLeft = node->right->left;
@@ -512,7 +513,7 @@ static void __rb_rotate_left(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_rotate_right----------------------- */
-static void __rb_rotate_right(cAssoArray *array, Node_st *node)
+static void __rb_rotate_right(cAssocArray *array, Node_st *node)
 {
 	Node_st *prevLeft = node->left;
 	Node_st *prevLeftRight = node->left->right;
@@ -560,7 +561,7 @@ static void __rb_rotate_right(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_check_insert_by_rb_rule----------------------- */
-static void __rb_check_insert_by_rb_rule(cAssoArray *array, Node_st *node)
+static void __rb_check_insert_by_rb_rule(cAssocArray *array, Node_st *node)
 {
 	Node_st *uncleNode = node->parent ? _rb_brother_node(node->parent) : NULL;
 
@@ -626,7 +627,7 @@ static void __rb_check_insert_by_rb_rule(cAssoArray *array, Node_st *node)
 
 
 /* --------------------_rb_insert----------------------- */
-static int _rb_insert(cAssoArray *array, const char *key, long hash, void *value, BOOL replaceWhenConflict, BOOL shouldFree, BOOL *isDuplicated)
+static int _rb_insert(cAssocArray *array, const char *key, long hash, void *value, BOOL replaceWhenConflict, BOOL shouldFree, BOOL *isDuplicated)
 {
 	Node_st *node = array->children;
 	Node_st *newNode = NULL;
@@ -739,7 +740,7 @@ ENDS:
 
 
 /* --------------------_rb_delete_leaf----------------------- */
-static int _rb_delete_leaf(cAssoArray *dict, Node_st *node, BOOL shouldFree)
+static int _rb_delete_leaf(cAssocArray *dict, Node_st *node, BOOL shouldFree)
 {
 	if (_rb_node_is_root(node))
 	{
@@ -806,7 +807,7 @@ static inline void _rb_read_node_status(const Node_st *node, BOOL *hasChild, BOO
 
 
 /* --------------------__rb_delete_node_and_reconnect_with----------------------- */
-static void __rb_delete_node_and_reconnect_with(cAssoArray *array, Node_st *nodeToDel, Node_st *nodeToReplace)
+static void __rb_delete_node_and_reconnect_with(cAssocArray *array, Node_st *nodeToDel, Node_st *nodeToReplace)
 {
 	if (_rb_node_is_root(nodeToDel))
 	{
@@ -832,7 +833,7 @@ static void __rb_delete_node_and_reconnect_with(cAssoArray *array, Node_st *node
 
 
 /* --------------------__rb_check_delete_node_case_6----------------------- */
-static void __rb_check_delete_node_case_6(cAssoArray *array, Node_st *node)
+static void __rb_check_delete_node_case_6(cAssocArray *array, Node_st *node)
 {
 	Node_st *sibling = _rb_brother_node(node->parent);
 
@@ -853,7 +854,7 @@ static void __rb_check_delete_node_case_6(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_check_delete_node_case_5----------------------- */
-static void __rb_check_delete_node_case_5(cAssoArray *array, Node_st *node)
+static void __rb_check_delete_node_case_5(cAssocArray *array, Node_st *node)
 {
 	Node_st *sibling = _rb_brother_node(node->parent);
 	BOOL sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
@@ -885,7 +886,7 @@ static void __rb_check_delete_node_case_5(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_check_delete_node_case_4----------------------- */
-static void __rb_check_delete_node_case_4(cAssoArray *array, Node_st *node)
+static void __rb_check_delete_node_case_4(cAssocArray *array, Node_st *node)
 {
 	Node_st *sibling = _rb_brother_node(node->parent);
 	BOOL sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
@@ -907,7 +908,7 @@ static void __rb_check_delete_node_case_4(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_check_delete_node_case_3----------------------- */
-static void __rb_check_delete_node_case_3(cAssoArray *array, Node_st *node)
+static void __rb_check_delete_node_case_3(cAssocArray *array, Node_st *node)
 {
 	Node_st *sibling = _rb_brother_node(node->parent);
 	BOOL sblLeftIsBlack = (sibling->left) ? _rb_node_is_black(sibling->left) : TRUE;
@@ -930,7 +931,7 @@ static void __rb_check_delete_node_case_3(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_check_delete_node_case_2----------------------- */
-static void __rb_check_delete_node_case_2(cAssoArray *array, Node_st *node)
+static void __rb_check_delete_node_case_2(cAssocArray *array, Node_st *node)
 {
 	Node_st *sibling = _rb_brother_node(node);
 		
@@ -955,7 +956,7 @@ static void __rb_check_delete_node_case_2(cAssoArray *array, Node_st *node)
 
 
 /* --------------------__rb_check_delete_node_case_1----------------------- */
-static void __rb_check_delete_node_case_1(cAssoArray *array, Node_st *node)
+static void __rb_check_delete_node_case_1(cAssocArray *array, Node_st *node)
 {
 	/* let's operate with diferent cases */
 	if (_rb_node_is_root(node))
@@ -971,7 +972,7 @@ static void __rb_check_delete_node_case_1(cAssoArray *array, Node_st *node)
 
 
 /* --------------------_rb_delete_node----------------------- */
-static int _rb_delete_node(cAssoArray *array, Node_st *node, BOOL freeObject)
+static int _rb_delete_node(cAssocArray *array, Node_st *node, BOOL freeObject)
 {
 	int error = 0;
 	BOOL nodeHasChild, nodeHasTwoChildren, nodeHasLeftChild, nodeHasRightChild;
@@ -1057,7 +1058,7 @@ static int _rb_delete_value_in_node(Node_st *node, const char *key, BOOL freeObj
 
 
 /* --------------------_rb_delete_value_in_array----------------------- */
-static int _rb_delete_value_in_array(cAssoArray *array, const char *key, BOOL freeObject)
+static int _rb_delete_value_in_array(cAssocArray *array, const char *key, BOOL freeObject)
 {
 	long hash = _hash(key);
 	Node_st *node = _locate_node(array, hash);
@@ -1102,10 +1103,10 @@ static int _rb_delete_value_in_array(cAssoArray *array, const char *key, BOOL fr
 #define __PUBLIC_INTERFACES
 #ifdef __PUBLIC_INTERFACES
 
-/* --------------------cAssoArray_Create----------------------- */
-cAssoArray *cAssoArray_Create(BOOL locked)
+/* --------------------cAssocArray_Create----------------------- */
+cAssocArray *cAssocArray_Create(BOOL locked)
 {
-	cAssoArray *array = malloc(sizeof(*array));
+	cAssocArray *array = malloc(sizeof(*array));
 	if (NULL == array) {
 		return NULL;
 	}
@@ -1124,16 +1125,16 @@ cAssoArray *cAssoArray_Create(BOOL locked)
 }
 
 
-/* --------------------cAssoArray_Delete----------------------- */
-int cAssoArray_Delete(cAssoArray *array)
+/* --------------------cAssocArray_Delete----------------------- */
+int cAssocArray_Delete(cAssocArray *array)
 {
 	// TODO:
 	return -1;
 }
 
 
-/* --------------------cAssoArray_Set----------------------- */
-int cAssoArray_SetValue(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate)
+/* --------------------cAssocArray_Set----------------------- */
+int cAssocArray_SetValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate)
 {
 	long hash = 0;
 	int ret = 0;
@@ -1156,8 +1157,8 @@ int cAssoArray_SetValue(cAssoArray *array, const char *key, void *value, BOOL fr
 }
 
 
-/* --------------------cAssoArray_Get----------------------- */
-void *cAssoArray_GetValue(cAssoArray *array, const char *key)
+/* --------------------cAssocArray_Get----------------------- */
+void *cAssocArray_GetValue(cAssocArray *array, const char *key)
 {
 	void *ret = NULL;
 	long hash = 0;
@@ -1179,8 +1180,8 @@ void *cAssoArray_GetValue(cAssoArray *array, const char *key)
 }
 
 
-/* --------------------cAssoArray_Size----------------------- */
-long cAssoArray_Size(cAssoArray *array)
+/* --------------------cAssocArray_Size----------------------- */
+long cAssocArray_Size(cAssocArray *array)
 {
 	if (array) {
 		return array->count;
@@ -1191,8 +1192,8 @@ long cAssoArray_Size(cAssoArray *array)
 }
 
 
-/* --------------------cAssoArray_Size----------------------- */
-int cAssoArray_RemoveValue(cAssoArray *array, const char *key, BOOL shouldFree)
+/* --------------------cAssocArray_Size----------------------- */
+int cAssocArray_RemoveValue(cAssocArray *array, const char *key, BOOL shouldFree)
 {
 	int ret = 0;
 
@@ -1212,8 +1213,8 @@ int cAssoArray_RemoveValue(cAssoArray *array, const char *key, BOOL shouldFree)
 }
 
 
-/* --------------------cAssoArray_Detach----------------------- */
-void *cAssoArray_DetachValue(cAssoArray *array, const char *key)
+/* --------------------cAssocArray_Detach----------------------- */
+void *cAssocArray_DetachValue(cAssocArray *array, const char *key)
 {
 	void *ret = NULL;
 	long hash = 0;
@@ -1254,8 +1255,8 @@ void *cAssoArray_DetachValue(cAssoArray *array, const char *key)
 }
 
 
-/* --------------------cAssoArray_Add----------------------- */
-int cAssoArray_AddValue(cAssoArray *array, const char *key, void *value)
+/* --------------------cAssocArray_Add----------------------- */
+int cAssocArray_AddValue(cAssocArray *array, const char *key, void *value)
 {
 	int ret = 0;
 	long hash = 0;
@@ -1283,8 +1284,8 @@ int cAssoArray_AddValue(cAssoArray *array, const char *key, void *value)
 }
 
 
-/* --------------------cAssoArray_Update----------------------- */
-int cAssoArray_UpdateValue(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut)
+/* --------------------cAssocArray_Update----------------------- */
+int cAssocArray_UpdateValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut)
 {
 	int ret = 0;
 	long hash = 0;

@@ -1,11 +1,12 @@
 /*******************************************************************************
 	Copyright (C) 2017 by Andrew Chang <laplacezhang@126.com>
-	File name: 	cAssoArray.h
+	File name: 	cAssocArray.h
 
 	Description: 	
-	    Interface declaration for cAssoArray.
+	    Interface declaration for cAssocArray.
 			
 	History:
+		2014-03-05: File rename as "cAssocArray.h" along with class name
 		2014-03-04: File created as "cAssoArray.h"
 
 	------------------------------------------------------------------------
@@ -22,11 +23,11 @@
 		
 ********************************************************************************/
 
-#ifndef __C_ASSO_ARRAY_H__
-#define __C_ASSO_ARRAY_H__
+#ifndef __C_ASSOC_ARRAY_H__
+#define __C_ASSOC_ARRAY_H__
 
-struct _cAssoArray;
-typedef struct _cAssoArray cAssoArray;
+struct _cAssocArray;
+typedef struct _cAssocArray cAssocArray;
 
 #ifndef NULL
 #ifndef _DO_NOT_DEF_NULL
@@ -42,18 +43,18 @@ typedef struct _cAssoArray cAssoArray;
 #endif
 #endif
 
-cAssoArray *cAssoArray_Create(BOOL locked);
-int cAssoArray_Delete(cAssoArray *array);
+cAssocArray *cAssocArray_Create(BOOL locked);
+int cAssocArray_Delete(cAssocArray *array);
 
-int cAssoArray_SetValue(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate);
-void *cAssoArray_GetValue(cAssoArray *array, const char *key);
-long cAssoArray_Size(cAssoArray *array);
+int cAssocArray_SetValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate);
+void *cAssocArray_GetValue(cAssocArray *array, const char *key);
+long cAssocArray_Size(cAssocArray *array);
 
-int cAssoArray_RemoveValue(cAssoArray *array, const char *key, BOOL shouldFree);
-void *cAssoArray_DetachValue(cAssoArray *array, const char *key);
+int cAssocArray_RemoveValue(cAssocArray *array, const char *key, BOOL shouldFree);
+void *cAssocArray_DetachValue(cAssocArray *array, const char *key);
 
-int cAssoArray_AddValue(cAssoArray *array, const char *key, void *value);
-int cAssoArray_UpdateValue(cAssoArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut);
+int cAssocArray_AddValue(cAssocArray *array, const char *key, void *value);
+int cAssocArray_UpdateValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut);
 
 
 #endif
