@@ -1,9 +1,9 @@
 # cAssocArray #
 
 Efficient Associative Array in C, implemented with Red-Black Tree.
-This is the main README file in English. For simplified Chinese version, please press [here](./readme_cn.md). (Unfinished...)
+This is the main README file in English. For simplified Chinese version, please press [here](./readme_cn.md). 
 
-中文版 README 请[点击这里](./readme_cn.md)。（未完成……）
+中文版 README 请[点击这里](./readme_cn.md)。
 
 # Description #
 
@@ -30,6 +30,8 @@ Return an array if success, NULL if error occurs.
 
 Invoking this function to release all members in the associative array and remove 
 the existence itself from the memory.
+
+This function lacked a parameter as `freeObjects` (currently treated as TRUE). This will be updated in the future.
 
 ---
 
@@ -84,6 +86,11 @@ Same as `cAssocArray_SetValue()`, but this function will fail and return error i
 
 Debug use for **cAssocArray**. This will print members in the array to console. Please do not invoke this function in formal project.
 
+# TODO #
+
+1. Add `freeObjects` parameter in `cAssocArray_Create()` function.
+2. Support "empty value" in associative array. I am considering using a value called "cEmptyValue" instead of "NULL".
+3. Support `cAssocArray_GetKeys()`
 
 
 # Contact Me #
