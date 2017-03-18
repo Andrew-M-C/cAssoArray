@@ -28,7 +28,6 @@ cAssocArray 的目的是使用 C 语言提供一个高效的关联数组类。
 ### `cAssocArray_Delete()` ###
 
 调用这个函数，释放掉关联数组中的所有对象，并且释放掉数组本身。
-这个函数还有点问题，主要是未提供 “`freeObjects`” 参数。
 
 ---
 
@@ -83,9 +82,8 @@ cAssocArray 的目的是使用 C 语言提供一个高效的关联数组类。
 
 # 下一步功能 #
 
-1. 如前文所述，要在 `cAssocArray_Delete()` 函数中支持 `freeObjects` 参数。
-2. 键值对中支持空值。考虑使用一个 `cEmptyValue` 来表示，与表示错误的 `NULL` 相区分。
-3. 支持 `cAssocArray_GetKeys()` 函数。
+1. 键值对中支持空值。考虑使用一个 `cEmptyValue` 来表示，与表示错误的 `NULL` 相区分。
+2. 支持 `cAssocArray_GetKeys()` 函数。
 
 # Contact Me #
 

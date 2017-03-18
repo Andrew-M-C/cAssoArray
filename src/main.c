@@ -224,7 +224,8 @@ int main(int argc, char* argv[])
 	cAssocArray_RemoveValue(array, "A", FALSE);cAssocArray_DumpToStdout(array);
 	cAssocArray_RemoveValue(array, "W", FALSE);cAssocArray_DumpToStdout(array);
 #endif
-	
+
+	cAssocArray_Delete(array, FALSE);
 	AMCLog("Test finished");
 	return 0;
 }

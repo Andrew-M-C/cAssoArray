@@ -44,7 +44,7 @@ typedef struct _cAssocArray cAssocArray;
 #endif
 
 cAssocArray *cAssocArray_Create(BOOL locked);
-int cAssocArray_Delete(cAssocArray *array);
+int cAssocArray_Delete(cAssocArray *array, BOOL freeObjects);
 
 int cAssocArray_SetValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate);
 void *cAssocArray_GetValue(cAssocArray *array, const char *key);

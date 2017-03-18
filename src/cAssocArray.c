@@ -281,6 +281,24 @@ static int _free_node(Node_st *node, BOOL shouldFree)
 }
 
 
+/* --------------------_free_node_and_its_children----------------------- */
+static int _free_node_and_its_children(Node_st *node, BOOL shouldFree)
+{
+	if (NULL == node) {
+		return 0;
+	}
+
+	if (node->left) {
+		_free_node_and_its_children(node->left, shouldFree);
+	}
+	if (node->right) {
+		_free_node_and_its_children(node->right, shouldFree);
+	}
+
+	return _free_node(node, shouldFree);
+}
+
+
 #endif
 
 
@@ -1204,10 +1222,20 @@ cAssocArray *cAssocArray_Create(BOOL locked)
 
 
 /* --------------------cAssocArray_Delete----------------------- */
-int cAssocArray_Delete(cAssocArray *array)
+int cAssocArray_Delete(cAssocArray *array, BOOL freeObjects)
 {
-	// TODO:
-	return -1;
+	if (NULL == array) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	int ret = _free_node_and_its_children(array->children, freeObjects);
+	if (array->use_lock) {
+		pthread_rwlock_destroy(&(array->rw_lock));
+	}
+
+	free(array);
+	return ret;
 }
 
 
