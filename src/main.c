@@ -225,6 +225,21 @@ int main(int argc, char* argv[])
 	cAssocArray_RemoveValue(array, "W", FALSE);cAssocArray_DumpToStdout(array);
 #endif
 
+	{
+		cArrayKeys *allKeys = cAssocArray_GetKeys(array);
+		cArrayKeys *next = allKeys;
+		long tmp = 0;
+
+		while(next)
+		{
+			AMCLog("[%02d] Key: %s", tmp, next->key);
+			tmp ++;
+			next = next->next;
+		}
+
+		cArrayKeys_Free(allKeys);
+	}
+
 	cAssocArray_Delete(array, FALSE);
 	AMCLog("Test finished");
 	return 0;

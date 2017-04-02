@@ -87,7 +87,7 @@ $(PROG_NAME): $(C_OBJS) $(CPP_OBJS)
 .PHONY: clean
 clean:
 	@rm -f $(C_OBJS) $(CPP_OBJS) $(PROG_NAME) clist.txt cpplist.txt *.d *.d.* *.o
-	@echo "	<< Project build >>"
+	@echo "	<< Project cleaned >>"
 
 .PHONY: test
 test:

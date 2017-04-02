@@ -43,6 +43,11 @@ typedef struct _cAssocArray cAssocArray;
 #endif
 #endif
 
+typedef struct _ARRAY_KEYS {
+	struct _ARRAY_KEYS *next;
+	char *key;
+} cArrayKeys;
+
 cAssocArray *cAssocArray_Create(BOOL locked);
 int cAssocArray_Delete(cAssocArray *array, BOOL freeObjects);
 
@@ -56,7 +61,11 @@ void *cAssocArray_DetachValue(cAssocArray *array, const char *key);
 int cAssocArray_AddValue(cAssocArray *array, const char *key, void *value);
 int cAssocArray_UpdateValue(cAssocArray *array, const char *key, void *value, BOOL freeDuplicate, void **prevValueOut);
 
+cArrayKeys *cAssocArray_GetKeys(cAssocArray *array);
+int cArrayKeys_Free(cArrayKeys *keys);
+
 void cAssocArray_DumpToStdout(cAssocArray *array);
+
 
 #endif
 

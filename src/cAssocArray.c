@@ -1194,6 +1194,91 @@ static int _rb_delete_value_in_array(cAssocArray *array, const char *key, BOOL f
 
 #endif
 
+/********/
+#define __READ_ARRAY_KEYS
+#ifdef __READ_ARRAY_KEYS
+
+/* --------------------_new_key_node----------------------- */
+static cArrayKeys *_new_key_node(const char *key)
+{
+	size_t keyLen = strlen(key);
+	cArrayKeys *ret = malloc(sizeof(*ret));
+	if (ret)
+	{
+		ret->next = NULL;
+		ret->key = malloc(keyLen + 1);
+
+		if (NULL == ret->key) {
+			free(ret);
+			ret = NULL;
+		}
+		else {
+			memcpy(ret->key, key, keyLen + 1);
+		}
+	}
+	return ret;
+}
+
+
+/* --------------------_new_key_node----------------------- */
+static int _free_key_node(cArrayKeys *key)
+{
+	free(key);
+	return 0;
+}
+
+
+/* --------------------_read_keys----------------------- */
+static cArrayKeys *_read_keys(Node_st *node, cArrayKeys **listEndOut)
+{
+	cArrayKeys *ret = NULL;
+	cArrayKeys *last = NULL;
+	Value_st *value = node->values;
+
+	/* read values for current node */
+	while(value)
+	{
+		if (NULL == ret) {
+			ret = _new_key_node(value->key);
+			last = ret;
+		}
+		else {
+			last->next = _new_key_node(value->key);
+			last = last->next;
+		}
+
+		value = value->next;
+	}
+
+	/* read values for children */
+	if (node->left) {
+		cArrayKeys *leftEnd = NULL;
+		cArrayKeys *leftStart = _read_keys(node->left, &leftEnd);
+		if (leftStart) {
+			last->next = leftStart;
+			last = leftEnd;
+		}
+	}
+	if (node->right) {
+		cArrayKeys *rightEnd = NULL;
+		cArrayKeys *rightStart = _read_keys(node->right, &rightEnd);
+		if (rightStart) {
+			last->next = rightStart;
+			last = rightEnd;
+		}
+	}
+
+	/* return */
+	if (listEndOut) {
+		*listEndOut = last;
+	}
+	return ret;
+}
+
+
+
+#endif
+
 
 /********/
 #define __PUBLIC_INTERFACES
@@ -1439,6 +1524,50 @@ int cAssocArray_UpdateValue(cAssocArray *array, const char *key, void *value, BO
 		*prevValueOut = prevValue;
 	}
 	return ret;
+}
+
+
+/* --------------------cAssocArray_GetKeys----------------------- */
+cArrayKeys *cAssocArray_GetKeys(cAssocArray *array)
+{
+	if (NULL == array) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	cArrayKeys *ret = NULL;
+
+	/* read each element */
+	_LOCK_ARRAY_READ(array);
+	if (array->children) {
+		ret = _read_keys(array->children, NULL);
+	}
+	_UNLOCK_ARRAY_READ(array);
+
+	/* return */
+	return ret;
+}
+
+
+/* --------------------cArrayKeys_Free----------------------- */
+int cArrayKeys_Free(cArrayKeys *keys)
+{
+	if (NULL == keys) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	cArrayKeys *key = keys;
+	cArrayKeys *next = NULL;
+
+	while(key)
+	{
+		next = key->next;
+		_free_key_node(key);
+		key = next;
+	}
+
+	return 0;
 }
 
 
