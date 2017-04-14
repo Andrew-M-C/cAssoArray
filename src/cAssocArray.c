@@ -339,28 +339,33 @@ static Value_st *_locate_value(cAssocArray *array, const char *key, const long h
 	Value_st *prev = NULL;
 	BOOL isFound = FALSE;
 
-	/* rbtree search */
-	do {
-		if (hash < parentNode->hash) {
-			parentNode = parentNode->left;
-		}
-		else if (hash > parentNode->hash) {
-			parentNode = parentNode->right;
-		}
-		else {
-			value = parentNode->values;
-		}
-	} while(parentNode && (NULL == value));
+	if (NULL == parentNode) {
+		/* empty storage */
+	}
+	else {
+		/* rbtree search */
+		do {
+			if (hash < parentNode->hash) {
+				parentNode = parentNode->left;
+			}
+			else if (hash > parentNode->hash) {
+				parentNode = parentNode->right;
+			}
+			else {
+				value = parentNode->values;
+			}
+		} while(parentNode && (NULL == value));
 
-	/* list search */
-	while(value && (FALSE == isFound))
-	{
-		if (0 == strcmp(key, value->key)) {
-			isFound = TRUE;
-		}
-		else {
-			prev = value;
-			value = value->next;
+		/* list search */
+		while(value && (FALSE == isFound))
+		{
+			if (0 == strcmp(key, value->key)) {
+				isFound = TRUE;
+			}
+			else {
+				prev = value;
+				value = value->next;
+			}
 		}
 	}
 
@@ -682,7 +687,7 @@ static int _rb_insert(cAssocArray *array, const char *key, long hash, void *valu
 		array->children = newNode;
 		array->count = 1;
 
-		errno = 0;
+		error = 0;
 		goto ENDS;
 	}
 
