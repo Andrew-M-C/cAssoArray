@@ -386,7 +386,11 @@ static Value_st *_locate_value(cAssocArray *array, const char *key, const long h
 			*prevValueOut = NULL;
 		}
 	}
-	return value;
+	if (isFound) {
+		return value;
+	} else {
+		return NULL;
+	}
 }
 
 
@@ -1357,6 +1361,7 @@ int cAssocArray_SetValue(cAssocArray *array, const char *key, void *value, BOOL 
 /* --------------------cAssocArray_Get----------------------- */
 void *cAssocArray_GetValue(cAssocArray *array, const char *key)
 {
+	Value_st *value = NULL;
 	void *ret = NULL;
 	long hash = 0;
 
@@ -1370,7 +1375,10 @@ void *cAssocArray_GetValue(cAssocArray *array, const char *key)
 
 	hash = _hash(key);
 	_LOCK_ARRAY_READ(array);
-	ret = _locate_value(array, key, hash, NULL, NULL);
+	value = _locate_value(array, key, hash, NULL, NULL);
+	if (value) {
+		ret = value->value;
+	}
 	_UNLOCK_ARRAY_READ(array);
 
 	return ret;
